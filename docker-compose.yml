@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  chrome:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: chrome-latest
+    shm_size: '2gb'  # Increase shared memory size for better performance
+    volumes:
+      - ./output:/home/chrome/output  # Mount a directory for saving files
+    environment:
+      - CHROME_ADDITIONAL_FLAGS=  # Add any additional flags here
+    command: ${CHROME_FLAGS} ${CHROME_ADDITIONAL_FLAGS} --version  # Default command to show version
+    # To override the command, use:
+    # docker-compose run chrome ${CHROME_FLAGS} --headless --disable-gpu --dump-dom https://www.google.com
