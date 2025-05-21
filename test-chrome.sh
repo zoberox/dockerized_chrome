@@ -10,7 +10,7 @@ echo
 
 # Test 1: Check Chrome version
 echo "Test 1: Checking Chrome version..."
-docker run --rm chrome-latest --version
+docker run --privileged --rm chrome-latest --version
 if [ $? -eq 0 ]; then
   echo "✅ Test 1 passed: Chrome version check successful"
 else
@@ -20,8 +20,8 @@ echo
 
 # Test 2: Take a screenshot
 echo "Test 2: Taking a screenshot..."
-docker run --rm -v $(pwd)/output:/home/chrome/output chrome-latest \
-  --headless --screenshot=/home/chrome/output/test-screenshot.png https://www.google.com
+docker run --privileged --rm -v $(pwd)/output:/home/chrome/output chrome-latest \
+  --screenshot=/home/chrome/output/test-screenshot.png https://www.google.com
 if [ -f "output/test-screenshot.png" ]; then
   echo "✅ Test 2 passed: Screenshot created successfully"
   echo "   Screenshot saved to: $(pwd)/output/test-screenshot.png"
@@ -32,7 +32,7 @@ echo
 
 # Test 3: Dump DOM
 echo "Test 3: Dumping DOM..."
-docker run --rm chrome-latest --headless --dump-dom https://example.com > output/test-dom.html
+docker run --privileged --rm chrome-latest --dump-dom https://example.com > output/test-dom.html
 if [ -s "output/test-dom.html" ]; then
   echo "✅ Test 3 passed: DOM dumped successfully"
   echo "   DOM saved to: $(pwd)/output/test-dom.html"
@@ -43,8 +43,8 @@ echo
 
 # Test 4: PDF Export
 echo "Test 4: Exporting PDF..."
-docker run --rm -v $(pwd)/output:/home/chrome/output chrome-latest \
-  --headless --print-to-pdf=/home/chrome/output/test-page.pdf https://example.com
+docker run --privileged --rm -v $(pwd)/output:/home/chrome/output chrome-latest \
+  --print-to-pdf=/home/chrome/output/test-page.pdf https://example.com
 if [ -f "output/test-page.pdf" ]; then
   echo "✅ Test 4 passed: PDF exported successfully"
   echo "   PDF saved to: $(pwd)/output/test-page.pdf"

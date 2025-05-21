@@ -15,7 +15,7 @@ echo
 
 # Extract titles from Hacker News
 echo "Extracting top stories from Hacker News..."
-docker run --rm chrome-latest --headless --disable-gpu --js-flags="--max_old_space_size=2048" --run-all-compositor-stages-before-draw --virtual-time-budget=10000 --dump-dom "$URL" > output/hackernews.html
+docker run --privileged --rm chrome-latest --js-flags="--max_old_space_size=2048" --run-all-compositor-stages-before-draw --virtual-time-budget=10000 --dump-dom "$URL" > output/hackernews.html
 
 # Process the HTML to extract titles (using grep and sed)
 echo "Processing results..."

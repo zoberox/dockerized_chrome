@@ -53,22 +53,34 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
-# Create a non-root user to run Chrome
-RUN groupadd -r chrome && useradd -r -g chrome -G audio,video chrome \
-    && mkdir -p /home/chrome && chown -R chrome:chrome /home/chrome
-
-# Set up Chrome flags for running in a container
-ENV CHROME_FLAGS="--no-sandbox --disable-dev-shm-usage --disable-gpu"
-
 # Create a wrapper script to run Chrome with Xvfb
 RUN echo '#!/bin/bash\n\
 Xvfb :99 -screen 0 1280x1024x24 -ac +extension GLX +render -noreset &\n\
 export DISPLAY=:99\n\
-google-chrome-stable $@\n' > /usr/local/bin/chrome-launcher.sh && \
+# Wait for Xvfb to start\n\
+sleep 1\n\
+# Run Chrome with all sandbox and namespace features disabled\n\
+google-chrome-stable \
+--no-sandbox \
+--disable-setuid-sandbox \
+--disable-dev-shm-usage \
+--disable-accelerated-2d-canvas \
+--disable-gpu \
+--disable-software-rasterizer \
+--disable-background-networking \
+--disable-default-apps \
+--disable-extensions \
+--disable-sync \
+--disable-translate \
+--headless \
+"$@"\n' > /usr/local/bin/chrome-launcher.sh && \
     chmod +x /usr/local/bin/chrome-launcher.sh
 
-# Switch to non-root user
-USER chrome
+# Create a non-root user to run Chrome
+RUN groupadd -r chrome && useradd -r -g chrome -G audio,video chrome \
+    && mkdir -p /home/chrome && chown -R chrome:chrome /home/chrome
+
+# Switch to root for entrypoint (to handle permissions better)
 WORKDIR /home/chrome
 
 # Set the entrypoint to run Chrome with Xvfb
