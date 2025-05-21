@@ -10,15 +10,18 @@ docker run --rm chrome-latest
 
 # Take a screenshot of a website
 echo -e "\nTaking a screenshot of google.com:"
-docker run --rm -v $(pwd):/home/chrome/output chrome-latest \
-  $CHROME_FLAGS --screenshot=/home/chrome/output/screenshot.png https://www.google.com
+docker run --rm -v $(pwd)/output:/home/chrome/output chrome-latest \
+  --headless --screenshot=/home/chrome/output/screenshot.png https://www.google.com
 
 # Print the HTML of a website
 echo -e "\nPrinting the HTML of google.com:"
 docker run --rm chrome-latest \
-  $CHROME_FLAGS --dump-dom https://www.google.com | head -n 20
+  --headless --dump-dom https://www.google.com | head -n 20
 
-# Run a simple performance test
-echo -e "\nRunning a simple performance test:"
-docker run --rm chrome-latest \
-  $CHROME_FLAGS --run-performance-benchmark https://www.google.com
+# Run Chrome in non-headless mode (will display in Xvfb)
+echo -e "\nRunning Chrome in non-headless mode (with Xvfb):"
+docker run --rm chrome-latest https://www.google.com
+
+# Run with increased shared memory
+echo -e "\nRunning with increased shared memory:"
+docker run --rm --shm-size=2g chrome-latest --headless https://www.google.com

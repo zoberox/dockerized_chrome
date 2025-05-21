@@ -38,6 +38,8 @@ RUN apt-get update && apt-get install -y \
     libxkbcommon0 \
     libxrandr2 \
     xdg-utils \
+    dbus-x11 \
+    xvfb \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
@@ -56,12 +58,19 @@ RUN groupadd -r chrome && useradd -r -g chrome -G audio,video chrome \
     && mkdir -p /home/chrome && chown -R chrome:chrome /home/chrome
 
 # Set up Chrome flags for running in a container
-ENV CHROME_FLAGS="--no-sandbox --disable-dev-shm-usage --disable-gpu --headless"
+ENV CHROME_FLAGS="--no-sandbox --disable-dev-shm-usage --disable-gpu"
+
+# Create a wrapper script to run Chrome with Xvfb
+RUN echo '#!/bin/bash\n\
+Xvfb :99 -screen 0 1280x1024x24 -ac +extension GLX +render -noreset &\n\
+export DISPLAY=:99\n\
+google-chrome-stable $@\n' > /usr/local/bin/chrome-launcher.sh && \
+    chmod +x /usr/local/bin/chrome-launcher.sh
 
 # Switch to non-root user
 USER chrome
 WORKDIR /home/chrome
 
-# Set the entrypoint to run Chrome
-ENTRYPOINT ["google-chrome-stable"]
+# Set the entrypoint to run Chrome with Xvfb
+ENTRYPOINT ["/usr/local/bin/chrome-launcher.sh"]
 CMD ["--version"]
