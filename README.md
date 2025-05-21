@@ -36,14 +36,57 @@ docker run --privileged --rm -v $(pwd)/output:/home/chrome/output chrome-latest 
 docker run --privileged --rm -v $(pwd)/output:/home/chrome/output chrome-latest --print-to-pdf=/home/chrome/output/page.pdf https://www.google.com
 ```
 
+### Run Chrome with GUI
+
+To run Chrome with a graphical user interface, you need to have an X server running on your host machine and share it with the Docker container:
+
+```bash
+# Allow connections from Docker to the X server
+xhost +local:docker
+
+# Run Chrome with GUI
+docker run --privileged --rm \
+  -e DISPLAY=$DISPLAY \
+  -v /tmp/.X11-unix:/tmp/.X11-unix \
+  chrome-latest --gui https://www.google.com
+
+# Revoke X server access when done
+xhost -local:docker
+```
+
+For convenience, you can use the included script:
+
+```bash
+./run-chrome-gui.sh
+```
+
 ## Features
 
 - Based on Ubuntu 20.04 for better compatibility with older hosts
 - Includes the latest stable version of Google Chrome
-- Uses Xvfb to provide a virtual display
+- Supports both headless mode (default) and GUI mode
+- Uses Xvfb to provide a virtual display when needed
 - Includes dbus-x11 for D-Bus support
 - Pre-configured with all necessary flags for containerized environments
-- Headless mode enabled by default
+
+## Modes of Operation
+
+### Headless Mode (Default)
+
+By default, Chrome runs in headless mode, which is ideal for:
+- Automated testing
+- Web scraping
+- PDF generation
+- Screenshot capture
+- Server environments without a display
+
+### GUI Mode
+
+Use the `--gui` flag to run Chrome with a graphical interface:
+- Interactive browsing
+- Visual debugging
+- Manual testing
+- Demonstrations
 
 ## Security Considerations
 
@@ -72,6 +115,11 @@ If you encounter permission issues when running Docker commands, you may need to
    ```bash
    sudo usermod -aG docker $USER
    ```
+
+For GUI mode issues:
+- Make sure you have an X server running on your host
+- Check that you've allowed connections with `xhost +local:docker`
+- Verify that your DISPLAY environment variable is set correctly
 
 ## Testing
 

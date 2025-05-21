@@ -53,7 +53,8 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
-# Create a wrapper script to run Chrome with Xvfb
+# Create two launcher scripts - one for headless mode and one for GUI mode
+# Headless launcher (default)
 RUN echo '#!/bin/bash\n\
 Xvfb :99 -screen 0 1280x1024x24 -ac +extension GLX +render -noreset &\n\
 export DISPLAY=:99\n\
@@ -73,7 +74,42 @@ google-chrome-stable \
 --disable-sync \
 --disable-translate \
 --headless \
-"$@"\n' > /usr/local/bin/chrome-launcher.sh && \
+"$@"\n' > /usr/local/bin/chrome-headless.sh && \
+    chmod +x /usr/local/bin/chrome-headless.sh
+
+# GUI launcher
+RUN echo '#!/bin/bash\n\
+# Check if DISPLAY is set, otherwise use Xvfb\n\
+if [ -z "$DISPLAY" ]; then\n\
+  echo "No DISPLAY set, starting Xvfb..."\n\
+  Xvfb :99 -screen 0 1280x1024x24 -ac +extension GLX +render -noreset &\n\
+  export DISPLAY=:99\n\
+  sleep 1\n\
+fi\n\
+# Run Chrome with all sandbox and namespace features disabled\n\
+google-chrome-stable \
+--no-sandbox \
+--disable-setuid-sandbox \
+--disable-dev-shm-usage \
+--disable-gpu \
+--disable-software-rasterizer \
+"$@"\n' > /usr/local/bin/chrome-gui.sh && \
+    chmod +x /usr/local/bin/chrome-gui.sh
+
+# Create a wrapper script that decides which mode to use
+RUN echo '#!/bin/bash\n\
+# Check if --headless is in the arguments\n\
+if echo "$@" | grep -q -- "--headless"; then\n\
+  # Use headless mode\n\
+  exec /usr/local/bin/chrome-headless.sh "$@"\n\
+elif [ "$1" = "--gui" ]; then\n\
+  # Remove the --gui flag and use GUI mode\n\
+  shift\n\
+  exec /usr/local/bin/chrome-gui.sh "$@"\n\
+else\n\
+  # Default to headless mode\n\
+  exec /usr/local/bin/chrome-headless.sh "$@"\n\
+fi\n' > /usr/local/bin/chrome-launcher.sh && \
     chmod +x /usr/local/bin/chrome-launcher.sh
 
 # Create a non-root user to run Chrome
